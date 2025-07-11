@@ -1,0 +1,5 @@
+package com.shka.tubemate
+
+import io.flutter.embedding.android.FlutterActivity
+
+class MainActivity : FlutterActivity()
