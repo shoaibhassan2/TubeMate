@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # TubeMate - Your All-in-One Media Companion
 
 ![App Logo/Banner - Optional, consider adding one later]
