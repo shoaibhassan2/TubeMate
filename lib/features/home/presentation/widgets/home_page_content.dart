@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tubemate/features/home/presentation/widgets/header_widget.dart';
-import 'package:tubemate/features/home/presentation/widgets/search_bar_widget.dart';
+// import 'package:tubemate/features/home/presentation/widgets/search_bar_widget.dart'; // <--- REMOVE THIS IMPORT
+import 'package:tubemate/features/home/presentation/widgets/link_input_section.dart'; // <--- NEW IMPORT
 
 class HomePageContent extends StatelessWidget {
   const HomePageContent({super.key});
@@ -13,14 +14,15 @@ class HomePageContent extends StatelessWidget {
         children: const [
           Padding(
             padding: EdgeInsets.all(20.0),
-            child: HeaderWidget(), // Header for the home screen
+            child: HeaderWidget(),
           ),
-          Spacer(), // Pushes search bar to the center vertically
+          Spacer(),
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 20.0),
-            child: SearchBarWidget(), // Search bar for the home screen
+            // Use the new LinkInputSection that contains both the search bar and the button
+            child: LinkInputSection(), // <--- USE NEW WIDGET
           ),
-          Spacer(), // Pushes search bar to the center vertically
+          Spacer(),
         ],
       ),
     );

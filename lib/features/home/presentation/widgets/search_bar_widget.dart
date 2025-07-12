@@ -1,74 +1,37 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 
-import 'package:tubemate/features/home/domain/enums/video_platform.dart'; // Import enum
-import 'package:tubemate/features/home/domain/models/identified_link.dart'; // Import model
-import 'package:tubemate/features/home/domain/services/platform_identifier_service.dart'; // Import service
-
+// This widget is now solely responsible for the visual search bar input.
+// Its internal "Download" button logic is removed, as external "Load Formats" will handle it.
 class SearchBarWidget extends StatefulWidget {
-  const SearchBarWidget({super.key});
+  final TextEditingController controller; // Controller passed from parent
+  final FocusNode focusNode; // FocusNode passed from parent
+
+  const SearchBarWidget({
+    super.key,
+    required this.controller,
+    required this.focusNode,
+  });
 
   @override
   State<SearchBarWidget> createState() => _SearchBarWidgetState();
 }
 
 class _SearchBarWidgetState extends State<SearchBarWidget> {
-  final FocusNode _focusNode = FocusNode();
-  final TextEditingController _textController = TextEditingController();
   bool _isFocused = false;
-  bool _isButtonPressed = false;
-
-  final PlatformIdentifierService _identifierService = PlatformIdentifierService(); // Instantiate the service
-  IdentifiedLink? _lastIdentifiedLink; // To store the result of the last identification
 
   @override
   void initState() {
     super.initState();
-    _focusNode.addListener(() {
-      setState(() => _isFocused = _focusNode.hasFocus);
+    widget.focusNode.addListener(() {
+      setState(() => _isFocused = widget.focusNode.hasFocus);
     });
   }
 
   @override
   void dispose() {
-    _focusNode.dispose();
-    _textController.dispose();
+    // Controller and FocusNode are managed by the parent, so don't dispose here.
     super.dispose();
-  }
-
-  // Method to trigger identification and provide feedback
-  void _performIdentification() {
-    final String url = _textController.text.trim();
-    _lastIdentifiedLink = _identifierService.identifyPlatform(url);
-
-    String message;
-    Color color;
-
-    if (_lastIdentifiedLink!.platform == VideoPlatform.none) {
-      message = 'Please paste a link to identify.';
-      color = Colors.orange;
-    } else if (_lastIdentifiedLink!.platform == VideoPlatform.other) {
-      message = 'Link identified: ${_lastIdentifiedLink!.platformName}. Not a recognized platform for direct download.';
-      color = Colors.orange;
-    } else {
-      message = 'Link identified: ${_lastIdentifiedLink!.platformName}. Ready to fetch formats!';
-      color = Colors.green;
-    }
-    _showSnackBar(message, color);
-
-    // TODO: Here you would typically pass _lastIdentifiedLink to a new screen or
-    // a service that handles fetching formats/download options based on the platform.
-    // Example: Navigator.push(context, MaterialPageRoute(builder: (_) => FormatsScreen(link: _lastIdentifiedLink!)));
-  }
-
-  void _showSnackBar(String message, Color color) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: color,
-        duration: const Duration(seconds: 2),
-      ),
-    );
   }
 
   @override
@@ -112,12 +75,12 @@ class _SearchBarWidgetState extends State<SearchBarWidget> {
             children: [
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 15),
-                child: Icon(Icons.link, color: accentColor),
+                child: Icon(Icons.link, color: accentColor), // <--- RESTORED LINK ICON
               ),
               Expanded(
                 child: TextField(
-                  controller: _textController,
-                  focusNode: _focusNode,
+                  controller: widget.controller, // Use controller from parent
+                  focusNode: widget.focusNode, // Use focusNode from parent
                   style: TextStyle(color: textColor),
                   decoration: InputDecoration(
                     hintText: 'Paste link or search...',
@@ -128,31 +91,8 @@ class _SearchBarWidgetState extends State<SearchBarWidget> {
                   ),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.only(right: 10.0),
-                child: GestureDetector(
-                  onTapDown: (_) => setState(() => _isButtonPressed = true),
-                  onTapUp: (_) {
-                    setState(() => _isButtonPressed = false);
-                    _performIdentification(); // Call the delegated method
-                  },
-                  onTapCancel: () => setState(() => _isButtonPressed = false),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 150),
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: _isButtonPressed
-                          ? accentColor.withOpacity(0.5)
-                          : accentColor.withOpacity(0.9),
-                    ),
-                    child: const Icon(Icons.search,
-                        color: Colors.white, size: 22),
-                    alignment: Alignment.center,
-                  ),
-                ),
-              ),
+              // The download/search icon logic is removed from here.
+              // It will be part of the external "Load Formats" button.
             ],
           ),
         ),

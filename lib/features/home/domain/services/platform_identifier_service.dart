@@ -8,7 +8,7 @@ class PlatformIdentifierService {
   // Regex patterns for different platforms
   static final Map<VideoPlatform, RegExp> _platformRegexes = {
     VideoPlatform.youtube: RegExp(
-      r'(?:https?:\/\/)?(?:www\.)?(?:m\.)?(?:youtube\.com|youtu\.be)\/(?:watch\?v=|embed\/|v\/|)([\w-]{11})(?:\S+)?',
+      r'(?:https?:\/\/)?(?:www\.)?(?:m\.)?(?:youtube\.com|youtu\.be)\/(?:watch\?v=|embed\/|v\/|shorts\/|)?([\w-]{11})(?:\S+)?',
       caseSensitive: false,
     ),
     VideoPlatform.instagram: RegExp(
@@ -16,7 +16,7 @@ class PlatformIdentifierService {
       caseSensitive: false,
     ),
     VideoPlatform.tiktok: RegExp(
-      r'(?:https?:\/\/)?(?:www\.)?(?:tiktok\.com)\/@(?:[a-zA-Z0-9._-]+)\/video\/([0-9]+)(?:\S+)?',
+      r'https?:\/\/(?:www\.)?(?:tiktok\.com\/@[\w\._-]+\/video\/\d+|vt\.tiktok\.com\/[\w\d]+)',
       caseSensitive: false,
     ),
     VideoPlatform.facebook: RegExp(
