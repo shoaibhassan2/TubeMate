@@ -1,12 +1,10 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:tubemate/features/whatsapp_saver/data/models/whatsapp_status_model.dart';
-// import 'package:tubemate/features/whatsapp_saver/presentation/screens/status_viewer_screen.dart'; // <--- REMOVE THIS IMPORT IF DELETING VIEWER SCREEN
 import 'package:tubemate/features/whatsapp_saver/domain/services/whatsapp_save_service.dart';
-import 'package:open_file_plus/open_file_plus.dart'; // <--- NEW IMPORT
+import 'package:open_file/open_file.dart'; // <--- CORRECTED IMPORT: Use open_file
 
 // --- OPTIONAL: If you want a minimal image viewer, keep a simple StatusImageViewerScreen ---
-// Otherwise, delete this and just display image directly or also open externally.
 class StatusImageViewerScreen extends StatelessWidget {
   final WhatsappStatusModel status;
   const StatusImageViewerScreen({super.key, required this.status});
@@ -131,10 +129,10 @@ class StatusItemTile extends StatelessWidget {
             );
           },
         ),
-        onTap: () async { // Make onTap async because openFile.open returns a Future
+        onTap: () async { // Make onTap async because OpenFile.open returns a Future
           if (status.type == StatusType.video) {
-            // Open video directly with external app
-            final result = await OpenFilePlus.open(status.filePath);
+            // Open video directly with external app using OpenFile.open
+            final result = await OpenFile.open(status.filePath); // <--- CORRECTED: Use OpenFile from open_file package
             if (result.type != ResultType.done) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
@@ -148,7 +146,7 @@ class StatusItemTile extends StatelessWidget {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => StatusImageViewerScreen(status: status), // Use the simplified image viewer
+                builder: (context) => StatusImageViewerScreen(status: status),
               ),
             );
           } else {
