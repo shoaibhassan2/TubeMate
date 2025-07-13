@@ -1,3 +1,5 @@
+// Path: lib/features/home/presentation/widgets/link_input_section.dart
+
 import 'package:flutter/material.dart';
 
 import 'package:tubemate/features/home/domain/enums/video_platform.dart';
@@ -5,33 +7,42 @@ import 'package:tubemate/features/home/domain/models/identified_link.dart';
 import 'package:tubemate/features/home/domain/services/platform_identifier_service.dart';
 import 'package:tubemate/features/home/presentation/widgets/search_bar_widget.dart';
 
+import 'package:tubemate/features/downloader/data/datasources/tiktok_api_client.dart';
+import 'package:tubemate/features/downloader/domain/services/download_manager_service.dart';
+import 'package:tubemate/features/downloader/data/models/tiktok_data_model.dart';
+
+import 'package:tubemate/features/downloader/presentation/widgets/download_options_bottom_sheet.dart'; // <--- NEW IMPORT
+
 class LinkInputSection extends StatefulWidget {
-  const LinkInputSection({super.key});
+  final TextEditingController textController;
+  final FocusNode focusNode;
+
+  const LinkInputSection({
+    super.key,
+    required this.textController,
+    required this.focusNode,
+  });
 
   @override
   State<LinkInputSection> createState() => _LinkInputSectionState();
 }
 
 class _LinkInputSectionState extends State<LinkInputSection> {
-  final TextEditingController _textController = TextEditingController();
-  final FocusNode _focusNode = FocusNode();
   final PlatformIdentifierService _identifierService = PlatformIdentifierService();
+  final TikTokApiClient _tiktokApiClient = TikTokApiClient();
 
-  IdentifiedLink? _lastIdentifiedLink; // To store the result of the last identification
-  bool _isLoading = false; // <--- NEW: State for loading indicator
+  IdentifiedLink? _lastIdentifiedLink;
+  bool _isLoading = false;
 
   @override
   void dispose() {
-    _textController.dispose();
-    _focusNode.dispose();
     super.dispose();
   }
 
-  // Method to trigger identification and provide feedback
-  Future<void> _onLoadFormatsPressed() async { // <--- Made async
-    if (_isLoading) return; // Prevent multiple presses while loading
+  Future<void> _onLoadFormatsPressed() async {
+    if (_isLoading) return;
 
-    final String url = _textController.text.trim();
+    final String url = widget.textController.text.trim();
 
     if (url.isEmpty) {
       _showSnackBar('Please paste a link to identify.', Colors.orange);
@@ -39,11 +50,8 @@ class _LinkInputSectionState extends State<LinkInputSection> {
     }
 
     setState(() {
-      _isLoading = true; // <--- Set loading to true
+      _isLoading = true;
     });
-
-    // Simulate network delay for identification (remove in real API integration)
-    await Future.delayed(const Duration(seconds: 2)); // <--- Simulate delay
 
     _lastIdentifiedLink = _identifierService.identifyPlatform(url);
 
@@ -53,22 +61,50 @@ class _LinkInputSectionState extends State<LinkInputSection> {
     if (_lastIdentifiedLink!.platform == VideoPlatform.none) {
       message = 'Please paste a link to identify.';
       color = Colors.orange;
+      _showSnackBar(message, color); // Show message immediately
+      setState(() { _isLoading = false; }); // Hide loading
+      return; // Exit if no link
     } else if (_lastIdentifiedLink!.platform == VideoPlatform.other) {
       message = 'Link identified: ${_lastIdentifiedLink!.platformName}. Not a recognized platform for direct download.';
       color = Colors.orange;
+      _showSnackBar(message, color);
+      setState(() { _isLoading = false; });
+      return; // Exit if not recognized
+    } else if (_lastIdentifiedLink!.platform == VideoPlatform.tiktok) {
+      message = 'Identified: TikTok. Fetching download info...';
+      color = Colors.blue;
+      _showSnackBar(message, color);
+
+      final TikTokDataModel? tiktokData = await _tiktokApiClient.fetchTiktokInfo(url);
+
+      if (mounted) { // Check if widget is still mounted after async operation
+        if (tiktokData != null && tiktokData.data != null) {
+          // --- NEW: Show bottom sheet instead of starting download directly ---
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true, // Allows sheet to take full height if content is large
+            builder: (context) {
+              return DownloadOptionsBottomSheet(videoData: tiktokData.data!);
+            },
+          );
+          message = 'TikTok info fetched. Select download options.';
+          color = Colors.green;
+        } else {
+          message = 'Failed to get TikTok download info. Please try another link.';
+          color = Colors.red;
+        }
+      }
     } else {
-      message = 'Link identified: ${_lastIdentifiedLink!.platformName}. Ready to fetch formats!';
-      color = Colors.green;
+      message = 'Link identified: ${_lastIdentifiedLink!.platformName}. API integration coming soon!';
+      color = Colors.yellow;
+      // Simulate delay for other platforms
+      await Future.delayed(const Duration(seconds: 1));
     }
-    _showSnackBar(message, color);
 
     setState(() {
-      _isLoading = false; // <--- Set loading to false
+      _isLoading = false;
     });
-
-    // TODO: Here you would typically pass _lastIdentifiedLink to a new screen or
-    // a service that handles fetching formats/download options based on the platform.
-    // Example: Navigator.push(context, MaterialPageRoute(builder: (_) => FormatsScreen(link: _lastIdentifiedLink!)));
+    _showSnackBar(message, color);
   }
 
   void _showSnackBar(String message, Color color) {
@@ -87,22 +123,20 @@ class _LinkInputSectionState extends State<LinkInputSection> {
 
     return Column(
       children: [
-        // The SearchBarWidget (input field with link icon)
         SearchBarWidget(
-          controller: _textController,
-          focusNode: _focusNode,
+          controller: widget.textController,
+          focusNode: widget.focusNode,
         ),
-        const SizedBox(height: 15), // Spacing between search bar and button
+        const SizedBox(height: 15),
 
-        // The "Load Formats" button
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0), // Match search bar padding
+          padding: const EdgeInsets.symmetric(horizontal: 20.0),
           child: SizedBox(
-            width: double.infinity, // Make button full width
+            width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed: _isLoading ? null : _onLoadFormatsPressed, // <--- Disable when loading
+              onPressed: _isLoading ? null : _onLoadFormatsPressed,
               icon: _isLoading
-                  ? SizedBox( // <--- Spinning circle when loading
+                  ? SizedBox(
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(
@@ -110,21 +144,17 @@ class _LinkInputSectionState extends State<LinkInputSection> {
                         valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                       ),
                     )
-                  : const Icon(Icons.download, color: Colors.white), // Default icon
+                  : const Icon(Icons.download, color: Colors.white),
               label: Text(
-                _isLoading ? 'Loading Formats...' : 'Load Formats', // <--- Text changes
+                _isLoading ? 'Loading Formats...' : 'Load Formats',
                 style: theme.textTheme.titleLarge?.copyWith(color: Colors.white),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: theme.colorScheme.secondary, // Use accent color for button
+                backgroundColor: theme.colorScheme.secondary,
                 padding: const EdgeInsets.symmetric(vertical: 15.0),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15.0), // Match search bar's corner radius
+                  borderRadius: BorderRadius.circular(15.0),
                 ),
-                // Button transparency when disabled (loading)
-                // This will make the button slightly transparent when onPressed is null
-                // based on the default ElevatedButton style.
-                // For more explicit transparency, you might need to use a custom MaterialStateProperty.
               ),
             ),
           ),

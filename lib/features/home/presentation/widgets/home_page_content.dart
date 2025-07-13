@@ -1,28 +1,40 @@
+// Path: lib/features/home/presentation/widgets/home_page_content.dart
+
 import 'package:flutter/material.dart';
 import 'package:tubemate/features/home/presentation/widgets/header_widget.dart';
-// import 'package:tubemate/features/home/presentation/widgets/search_bar_widget.dart'; // <--- REMOVE THIS IMPORT
-import 'package:tubemate/features/home/presentation/widgets/link_input_section.dart'; // <--- NEW IMPORT
+import 'package:tubemate/features/home/presentation/widgets/link_input_section.dart';
 
 class HomePageContent extends StatelessWidget {
-  const HomePageContent({super.key});
+  // <--- NEW: Accept controller and focusNode
+  final TextEditingController linkInputController;
+  final FocusNode linkInputFocusNode;
+
+  const HomePageContent({
+    super.key,
+    required this.linkInputController,
+    required this.linkInputFocusNode,
+  });
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
-          Padding(
+        children: [
+          const Padding(
             padding: EdgeInsets.all(20.0),
             child: HeaderWidget(),
           ),
-          Spacer(),
+          const Spacer(),
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20.0),
-            // Use the new LinkInputSection that contains both the search bar and the button
-            child: LinkInputSection(), // <--- USE NEW WIDGET
+            padding: const EdgeInsets.symmetric(horizontal: 20.0),
+            // <--- NEW: Pass controller and focusNode to LinkInputSection
+            child: LinkInputSection(
+              textController: linkInputController,
+              focusNode: linkInputFocusNode,
+            ),
           ),
-          Spacer(),
+          const Spacer(),
         ],
       ),
     );

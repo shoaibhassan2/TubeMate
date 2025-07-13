@@ -36,13 +36,15 @@ dependencies:
   cupertino_icons: ^1.0.8
   shared_preferences: ^2.5.3
   font_awesome_flutter: ^10.7.0
-  http: ^0.13.6
+  http: ^1.4.0
   html: ^0.15.6
   permission_handler: ^12.0.1
   video_thumbnail: ^0.5.6
   path_provider: ^2.1.1
   open_file: ^3.5.10
   flutter_image_gallery_saver: ^0.0.2
+  dio: ^5.8.0+1
+  flutter_local_notifications: ^19.3.0
 
 
 dev_dependencies:

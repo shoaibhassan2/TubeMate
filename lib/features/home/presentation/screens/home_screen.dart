@@ -1,8 +1,11 @@
+// Path: lib/features/home/presentation/screens/home_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:tubemate/core/presentation/widgets/wave_background_widget.dart';
 import 'package:tubemate/features/home/presentation/widgets/home_page_content.dart';
 import 'package:tubemate/features/whatsapp_saver/presentation/screens/whatsapp_status_saver_screen.dart';
+import 'package:tubemate/features/downloader/presentation/screens/downloads_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -12,41 +15,53 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _selectedIndex = 0; // State for controlling the selected tab
+  int _selectedIndex = 0;
 
-  // Callback function for tab selection
+  // <--- NEW: Move TextEditingController and FocusNode here
+  final TextEditingController _linkInputController = TextEditingController();
+  final FocusNode _linkInputFocusNode = FocusNode();
+
+  @override
+  void dispose() {
+    _linkInputController.dispose(); // Dispose controllers when HomeScreen is disposed
+    _linkInputFocusNode.dispose();
+    super.dispose();
+  }
+
   void _onTap(int index) => setState(() => _selectedIndex = index);
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final accentColor = theme.colorScheme.primary; // Get primary color from theme
+    final accentColor = theme.colorScheme.primary;
 
-    // List of pages corresponding to bottom navigation bar items
+    // <--- NEW: Pass controller and focusNode to HomePageContent
+    // HomePageContent will then pass it down to LinkInputSection and SearchBarWidget
     final List<Widget> pages = [
-      const HomePageContent(), // Home tab content
-      Center(child: Text('Downloads Page', style: theme.textTheme.headlineSmall)), // Placeholder for Downloads tab
-      const WhatsappStatusSaverScreen(), // WhatsApp Status Saver Screen for the 'WhatsApp' tab
+      HomePageContent(
+        linkInputController: _linkInputController,
+        linkInputFocusNode: _linkInputFocusNode,
+      ),
+      const DownloadsScreen(),
+      const WhatsappStatusSaverScreen(),
     ];
 
     return Scaffold(
       body: Stack(
         children: [
-          const WaveBackgroundWidget(), // Reusable wave background
-          pages[_selectedIndex], // Display selected page content
+          const WaveBackgroundWidget(),
+          pages[_selectedIndex],
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex, // Current active tab
-        onTap: _onTap, // Callback for tab selection
-        // Removed splashColor: Colors.transparent because it's not supported in your Flutter SDK version.
-        // The default splash behavior will apply.
+        currentIndex: _selectedIndex,
+        onTap: _onTap,
         items: [
           const BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           const BottomNavigationBarItem(icon: Icon(Icons.download), label: 'Downloads'),
           BottomNavigationBarItem(
             icon: const FaIcon(FontAwesomeIcons.whatsapp),
-            activeIcon: FaIcon(FontAwesomeIcons.whatsapp, color: accentColor), // Use theme accent color
+            activeIcon: FaIcon(FontAwesomeIcons.whatsapp, color: accentColor),
             label: 'WhatsApp',
           ),
         ],
