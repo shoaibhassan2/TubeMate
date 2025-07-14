@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:tubemate/config/theme/theme_controller.dart'; // Corrected import path
+import 'package:tubemate/core/theme/theme_controller.dart';// Corrected import path
 
 class SettingsThemeTile extends StatelessWidget {
   const SettingsThemeTile({super.key});

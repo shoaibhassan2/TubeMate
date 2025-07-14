@@ -7,11 +7,11 @@ enum StatusType {
   unknown, // For files that are neither image nor video (e.g., .nomedia)
 }
 
-// Model class to hold details of a WhatsApp status file
+
 class WhatsappStatusModel {
-  final String filePath; // Full path to the status file
-  final StatusType type; // Type of media (image, video, unknown)
-  final File file; // The actual File object
+  final String filePath;  // Full path to the status file
+  final StatusType type;  // Type of media (image, video, unknown)
+  final File file;        // The actual File object
 
   // Path to a generated thumbnail image for videos (null for images)
   String? thumbnailPath;

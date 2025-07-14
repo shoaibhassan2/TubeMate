@@ -1,5 +1,7 @@
 // Path: lib/features/home/presentation/widgets/link_input_section.dart
 
+// Path: lib/features/home/presentation/widgets/link_input_section.dart
+
 import 'package:flutter/material.dart';
 
 import 'package:tubemate/features/home/domain/enums/video_platform.dart';
@@ -11,16 +13,19 @@ import 'package:tubemate/features/downloader/data/datasources/tiktok_api_client.
 import 'package:tubemate/features/downloader/domain/services/download_manager_service.dart';
 import 'package:tubemate/features/downloader/data/models/tiktok_data_model.dart';
 
-import 'package:tubemate/features/downloader/presentation/widgets/download_options_bottom_sheet.dart'; // <--- NEW IMPORT
+import 'package:tubemate/features/downloader/presentation/widgets/download_options_bottom_sheet.dart'; // <--- Correct path
+
 
 class LinkInputSection extends StatefulWidget {
   final TextEditingController textController;
   final FocusNode focusNode;
+  final VoidCallback navigateToDownloadsTab; // <--- NEW: Navigation callback
 
   const LinkInputSection({
     super.key,
     required this.textController,
     required this.focusNode,
+    required this.navigateToDownloadsTab, // <--- NEW
   });
 
   @override
@@ -55,56 +60,48 @@ class _LinkInputSectionState extends State<LinkInputSection> {
 
     _lastIdentifiedLink = _identifierService.identifyPlatform(url);
 
-    String message;
-    Color color;
-
     if (_lastIdentifiedLink!.platform == VideoPlatform.none) {
-      message = 'Please paste a link to identify.';
-      color = Colors.orange;
-      _showSnackBar(message, color); // Show message immediately
-      setState(() { _isLoading = false; }); // Hide loading
-      return; // Exit if no link
-    } else if (_lastIdentifiedLink!.platform == VideoPlatform.other) {
-      message = 'Link identified: ${_lastIdentifiedLink!.platformName}. Not a recognized platform for direct download.';
-      color = Colors.orange;
-      _showSnackBar(message, color);
+      _showSnackBar('Invalid link. Please check and try again.', Colors.red);
       setState(() { _isLoading = false; });
-      return; // Exit if not recognized
+      return;
+    } else if (_lastIdentifiedLink!.platform == VideoPlatform.other) {
+      _showSnackBar('Unrecognized platform link. Only TikTok, YouTube, Instagram, Facebook are supported.', Colors.orange);
+      setState(() { _isLoading = false; });
+      return;
     } else if (_lastIdentifiedLink!.platform == VideoPlatform.tiktok) {
-      message = 'Identified: TikTok. Fetching download info...';
-      color = Colors.blue;
-      _showSnackBar(message, color);
-
       final TikTokDataModel? tiktokData = await _tiktokApiClient.fetchTiktokInfo(url);
 
-      if (mounted) { // Check if widget is still mounted after async operation
+      if (mounted) {
         if (tiktokData != null && tiktokData.data != null) {
-          // --- NEW: Show bottom sheet instead of starting download directly ---
-          showModalBottomSheet(
+          // --- NEW: Pass the navigation callback to the bottom sheet ---
+          final bool? downloadInitiated = await showModalBottomSheet<bool>( // showModalBottomSheet can return a result
             context: context,
-            isScrollControlled: true, // Allows sheet to take full height if content is large
+            isScrollControlled: true,
             builder: (context) {
-              return DownloadOptionsBottomSheet(videoData: tiktokData.data!);
+              return DownloadOptionsBottomSheet(
+                videoData: tiktokData.data!,
+                onDownloadInitiated: widget.navigateToDownloadsTab, // <--- Pass callback
+              );
             },
           );
-          message = 'TikTok info fetched. Select download options.';
-          color = Colors.green;
+          // ----------------------------------------------------------
+
+          if (downloadInitiated == true) {
+            // Optional: clear text field after initiating download
+            widget.textController.clear();
+          }
+
         } else {
-          message = 'Failed to get TikTok download info. Please try another link.';
-          color = Colors.red;
+          _showSnackBar('Failed to get TikTok download info. Please try another link.', Colors.red);
         }
       }
     } else {
-      message = 'Link identified: ${_lastIdentifiedLink!.platformName}. API integration coming soon!';
-      color = Colors.yellow;
-      // Simulate delay for other platforms
       await Future.delayed(const Duration(seconds: 1));
     }
 
     setState(() {
       _isLoading = false;
     });
-    _showSnackBar(message, color);
   }
 
   void _showSnackBar(String message, Color color) {

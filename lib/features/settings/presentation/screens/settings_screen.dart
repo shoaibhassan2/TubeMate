@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:tubemate/features/settings/presentation/widgets/settings_list.dart'; // Corrected import path
+import 'package:tubemate/features/settings/presentation/widgets/settings_list.dart';
 
 class SettingsScreen extends StatelessWidget { // Renamed for clarity
   const SettingsScreen({super.key});

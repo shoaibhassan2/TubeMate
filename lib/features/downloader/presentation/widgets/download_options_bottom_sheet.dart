@@ -1,23 +1,25 @@
 // Path: lib/features/downloader/presentation/widgets/download_options_bottom_sheet.dart
 
 import 'package:flutter/material.dart';
-import 'package:tubemate/features/downloader/data/models/tiktok_data_model.dart';
-import 'package:tubemate/features/downloader/domain/services/download_manager_service.dart';
+import 'package:tubemate/features/downloader/data/models/tiktok_data_model.dart'; // <--- Correct path
+import 'package:tubemate/features/downloader/domain/services/download_manager_service.dart'; // <--- Correct path
 
 // Enum for quality options
 enum VideoQuality {
-  hdNoWatermark, // Corresponds to 'play' or 'hdplay'
-  hdWithWatermark, // Corresponds to 'wmplay'
-  audioOnly, // Corresponds to 'music'
-  none, // No selection
+  hdNoWatermark,
+  hdWithWatermark,
+  audioOnly,
+  none,
 }
 
 class DownloadOptionsBottomSheet extends StatefulWidget {
-  final TikTokVideoData videoData; // Data fetched from TikTok API
+  final TikTokVideoData videoData;
+  final VoidCallback onDownloadInitiated; // <--- NEW: Callback to signal parent
 
   const DownloadOptionsBottomSheet({
     super.key,
     required this.videoData,
+    required this.onDownloadInitiated, // <--- NEW
   });
 
   @override
@@ -33,7 +35,6 @@ class _DownloadOptionsBottomSheetState extends State<DownloadOptionsBottomSheet>
   @override
   void initState() {
     super.initState();
-    // Initialize selected quality based on what's available
     if ((widget.videoData.hdplay != null && widget.videoData.hdplay!.isNotEmpty) ||
         (widget.videoData.play != null && widget.videoData.play!.isNotEmpty)) {
       _selectedQuality = VideoQuality.hdNoWatermark;
@@ -42,11 +43,10 @@ class _DownloadOptionsBottomSheetState extends State<DownloadOptionsBottomSheet>
     } else if (widget.videoData.music != null && widget.videoData.music!.isNotEmpty) {
       _selectedQuality = VideoQuality.audioOnly;
     } else {
-      _selectedQuality = VideoQuality.none; // No default selection if nothing is available
+      _selectedQuality = VideoQuality.none;
     }
   }
 
-  // Helper to get the correct download URL based on selected quality
   String? _getDownloadUrl(VideoQuality quality) {
     switch (quality) {
       case VideoQuality.hdNoWatermark:
@@ -60,7 +60,6 @@ class _DownloadOptionsBottomSheetState extends State<DownloadOptionsBottomSheet>
     }
   }
 
-  // Helper to get the file extension based on selected quality
   String _getFileExtension(VideoQuality quality) {
     switch (quality) {
       case VideoQuality.hdNoWatermark:
@@ -73,8 +72,7 @@ class _DownloadOptionsBottomSheetState extends State<DownloadOptionsBottomSheet>
     }
   }
 
-  // Method to handle the download button press
-  Future<void> _startDownload() async {
+  void _startDownloadAndDismiss() { // Changed to void
     if (_isDownloading) return;
 
     final String? selectedDownloadUrl = _getDownloadUrl(_selectedQuality);
@@ -96,51 +94,48 @@ class _DownloadOptionsBottomSheetState extends State<DownloadOptionsBottomSheet>
       _isDownloading = true;
     });
 
-    try {
-      String sanitizedTitle = widget.videoData.title?.replaceAll(RegExp(r'[^\w\s.-]'), '') ?? 'tiktok_download';
-      const int maxFileNameLength = 100;
-      if (sanitizedTitle.length > maxFileNameLength) {
-        sanitizedTitle = sanitizedTitle.substring(0, maxFileNameLength);
-        if (sanitizedTitle.length > 5) {
-          sanitizedTitle = '${sanitizedTitle.substring(0, maxFileNameLength - 5)}...';
-        }
+    String sanitizedTitle = widget.videoData.title?.replaceAll(RegExp(r'[^\w\s.-]'), '') ?? 'tiktok_download';
+    const int maxFileNameLength = 100;
+    if (sanitizedTitle.length > maxFileNameLength) {
+      sanitizedTitle = sanitizedTitle.substring(0, maxFileNameLength);
+      if (sanitizedTitle.length > 5) {
+        sanitizedTitle = '${sanitizedTitle.substring(0, maxFileNameLength - 5)}...';
       }
-      final String fileName = '$sanitizedTitle$fileExtension';
+    }
+    final String fileName = '$sanitizedTitle$fileExtension';
 
-      await _downloadManager.startDownload(
-        downloadUrl: selectedDownloadUrl,
-        fileName: fileName,
-        thumbnailUrl: widget.videoData.cover ?? '',
-        isVideo: isVideo,
-      );
-
-      if (mounted) {
-        Navigator.pop(context); // Close the bottom sheet on success
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Download started! Check Downloads tab.'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 3),
-          ),
-        );
-      }
-    } catch (e) {
+    _downloadManager.startDownload( // <--- No longer awaited here
+      downloadUrl: selectedDownloadUrl,
+      fileName: fileName,
+      thumbnailUrl: widget.videoData.cover ?? '',
+      isVideo: isVideo,
+    ).catchError((e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to start download: ${e.toString()}'),
+            content: Text('Failed to initiate download: ${e.toString()}'),
             backgroundColor: Colors.red,
             duration: Duration(seconds: 5),
           ),
         );
       }
-    } finally {
+    }).whenComplete(() {
       if (mounted) {
+        // Reset loading state if the sheet somehow remains mounted
         setState(() {
           _isDownloading = false;
         });
       }
+    });
+
+    // --- CRITICAL FIX ---
+    // Signal the parent HomeScreen to navigate before popping
+    widget.onDownloadInitiated(); // <--- CALL THE CALLBACK
+    if (mounted) {
+      Navigator.pop(context, true); // Pop the bottom sheet with a true result
+      // The snackbar is now shown by the parent (LinkInputSection)
     }
+    // --------------------
   }
 
   @override
@@ -188,7 +183,6 @@ class _DownloadOptionsBottomSheetState extends State<DownloadOptionsBottomSheet>
           if ((widget.videoData.play != null && widget.videoData.play!.isNotEmpty) ||
              (widget.videoData.hdplay != null && widget.videoData.hdplay!.isNotEmpty))
             ListTile(
-              // <--- ADDED onTap to ListTile for Radio button selection
               onTap: () => setState(() => _selectedQuality = VideoQuality.hdNoWatermark),
               title: Text('HD Video (No Watermark)', style: theme.textTheme.bodyLarge),
               leading: Radio<VideoQuality>(
@@ -208,7 +202,6 @@ class _DownloadOptionsBottomSheetState extends State<DownloadOptionsBottomSheet>
           // HD Video (With Watermark) Option
           if (widget.videoData.wmplay != null && widget.videoData.wmplay!.isNotEmpty)
             ListTile(
-              // <--- ADDED onTap to ListTile for Radio button selection
               onTap: () => setState(() => _selectedQuality = VideoQuality.hdWithWatermark),
               title: Text('HD Video (With Watermark)', style: theme.textTheme.bodyLarge),
               leading: Radio<VideoQuality>(
@@ -228,7 +221,6 @@ class _DownloadOptionsBottomSheetState extends State<DownloadOptionsBottomSheet>
           // Audio Only Option
           if (widget.videoData.music != null && widget.videoData.music!.isNotEmpty)
             ListTile(
-              // <--- ADDED onTap to ListTile for Radio button selection
               onTap: () => setState(() => _selectedQuality = VideoQuality.audioOnly),
               title: Text('Audio Only', style: theme.textTheme.bodyLarge),
               leading: Radio<VideoQuality>(
@@ -249,8 +241,7 @@ class _DownloadOptionsBottomSheetState extends State<DownloadOptionsBottomSheet>
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              // Disable if no quality is selected or downloading
-              onPressed: _isDownloading || _selectedQuality == VideoQuality.none ? null : _startDownload,
+              onPressed: _isDownloading || _selectedQuality == VideoQuality.none ? null : _startDownloadAndDismiss,
               icon: _isDownloading
                   ? const SizedBox(
                       width: 20,

@@ -5,14 +5,15 @@ import 'package:tubemate/features/home/presentation/widgets/header_widget.dart';
 import 'package:tubemate/features/home/presentation/widgets/link_input_section.dart';
 
 class HomePageContent extends StatelessWidget {
-  // <--- NEW: Accept controller and focusNode
   final TextEditingController linkInputController;
   final FocusNode linkInputFocusNode;
+  final VoidCallback navigateToDownloadsTab; // <--- NEW: Navigation callback
 
   const HomePageContent({
     super.key,
     required this.linkInputController,
     required this.linkInputFocusNode,
+    required this.navigateToDownloadsTab, // <--- NEW
   });
 
   @override
@@ -28,10 +29,10 @@ class HomePageContent extends StatelessWidget {
           const Spacer(),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20.0),
-            // <--- NEW: Pass controller and focusNode to LinkInputSection
             child: LinkInputSection(
               textController: linkInputController,
               focusNode: linkInputFocusNode,
+              navigateToDownloadsTab: navigateToDownloadsTab, // <--- NEW: Pass it down
             ),
           ),
           const Spacer(),

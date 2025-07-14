@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:tubemate/core/presentation/widgets/wave_background_widget.dart';
+import 'package:tubemate/common/widgets/wave_background_widget.dart'; // <--- UPDATED IMPORT
 import 'package:tubemate/features/home/presentation/widgets/home_page_content.dart';
 import 'package:tubemate/features/whatsapp_saver/presentation/screens/whatsapp_status_saver_screen.dart';
 import 'package:tubemate/features/downloader/presentation/screens/downloads_screen.dart';
@@ -17,16 +17,25 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
 
-  // <--- NEW: Move TextEditingController and FocusNode here
   final TextEditingController _linkInputController = TextEditingController();
   final FocusNode _linkInputFocusNode = FocusNode();
 
   @override
   void dispose() {
-    _linkInputController.dispose(); // Dispose controllers when HomeScreen is disposed
+    _linkInputController.dispose();
     _linkInputFocusNode.dispose();
     super.dispose();
   }
+
+  // <--- NEW: Public method to navigate to a specific tab ---
+  void navigateToTab(int index) {
+    if (index >= 0 && index < 3) { // Ensure index is valid for 3 tabs
+      setState(() {
+        _selectedIndex = index;
+      });
+    }
+  }
+  // --------------------------------------------------------
 
   void _onTap(int index) => setState(() => _selectedIndex = index);
 
@@ -35,12 +44,13 @@ class _HomeScreenState extends State<HomeScreen> {
     final theme = Theme.of(context);
     final accentColor = theme.colorScheme.primary;
 
-    // <--- NEW: Pass controller and focusNode to HomePageContent
-    // HomePageContent will then pass it down to LinkInputSection and SearchBarWidget
     final List<Widget> pages = [
       HomePageContent(
         linkInputController: _linkInputController,
         linkInputFocusNode: _linkInputFocusNode,
+        // <--- NEW: Pass navigateToTab function down ---
+        navigateToDownloadsTab: () => navigateToTab(1), // Index 1 is Downloads
+        // ---------------------------------------------
       ),
       const DownloadsScreen(),
       const WhatsappStatusSaverScreen(),
@@ -69,3 +79,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
+
+
+

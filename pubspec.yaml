@@ -45,6 +45,7 @@ dependencies:
   flutter_image_gallery_saver: ^0.0.2
   dio: ^5.8.0+1
   flutter_local_notifications: ^19.3.0
+  flutter_native_splash: ^2.4.6
 
 
 dev_dependencies:
@@ -59,9 +60,8 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
 
-flutter_icons:
+flutter_launcher_icons:
   android: true
-  ios: true
   image_path: "assets/icons/app_icon.png"
   remove_alpha_ios: true
 
