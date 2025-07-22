@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:tubemate/common/widgets/wave_background_widget.dart'; // <--- UPDATED IMPORT
+import 'package:tubemate/common/widgets/wave_background_widget.dart';
 import 'package:tubemate/features/home/presentation/widgets/home_page_content.dart';
 import 'package:tubemate/features/whatsapp_saver/presentation/screens/whatsapp_status_saver_screen.dart';
 import 'package:tubemate/features/downloader/presentation/screens/downloads_screen.dart';
@@ -26,16 +26,13 @@ class _HomeScreenState extends State<HomeScreen> {
     _linkInputFocusNode.dispose();
     super.dispose();
   }
-
-  // <--- NEW: Public method to navigate to a specific tab ---
   void navigateToTab(int index) {
-    if (index >= 0 && index < 3) { // Ensure index is valid for 3 tabs
+    if (index >= 0 && index < 3) { 
       setState(() {
         _selectedIndex = index;
       });
     }
   }
-  // --------------------------------------------------------
 
   void _onTap(int index) => setState(() => _selectedIndex = index);
 
@@ -48,9 +45,7 @@ class _HomeScreenState extends State<HomeScreen> {
       HomePageContent(
         linkInputController: _linkInputController,
         linkInputFocusNode: _linkInputFocusNode,
-        // <--- NEW: Pass navigateToTab function down ---
         navigateToDownloadsTab: () => navigateToTab(1), // Index 1 is Downloads
-        // ---------------------------------------------
       ),
       const DownloadsScreen(),
       const WhatsappStatusSaverScreen(),

@@ -1,10 +1,7 @@
 // Path: lib/features/downloader/data/models/download_item_model.dart
-
 import 'package:flutter/material.dart';
-import 'package:dio/dio.dart'; // <--- NEW IMPORT for CancelToken
+import 'package:dio/dio.dart';
 import 'package:tubemate/features/downloader/domain/enums/download_status.dart';
-
-// Enum to define the status of a download (already defined in its own file)
 
 class DownloadItemModel {
   final String id;
@@ -18,7 +15,7 @@ class DownloadItemModel {
   DownloadStatus status;
   double progress;
   String? errorMessage;
-  CancelToken? cancelToken; // <--- NEW: To manage pausing/cancelling downloads
+  CancelToken? cancelToken;
 
   DownloadItemModel({
     required this.id,
@@ -31,7 +28,7 @@ class DownloadItemModel {
     this.status = DownloadStatus.pending,
     this.progress = 0.0,
     this.errorMessage,
-    this.cancelToken, // <--- NEW
+    this.cancelToken,
   });
 
   static String generateId(String downloadUrl, bool isVideo, [int? timestamp]) {
@@ -45,7 +42,7 @@ class DownloadItemModel {
     String? tempLocalFilePath,
     String? publicGalleryPath,
     String? errorMessage,
-    CancelToken? cancelToken, // <--- NEW
+    CancelToken? cancelToken,
   }) {
     return DownloadItemModel(
       id: id,
@@ -62,9 +59,6 @@ class DownloadItemModel {
     );
   }
 
-  // --- NEW: Serialization methods for Shared Preferences (update to include cancelToken) ---
-  // Note: CancelToken itself cannot be serialized directly. We only save/load its presence.
-  // When loaded, the token will be null, and resume would start a new download.
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -77,7 +71,6 @@ class DownloadItemModel {
       'status': status.index,
       'progress': progress,
       'errorMessage': errorMessage,
-      // 'cancelToken' cannot be serialized
     };
   }
 
@@ -93,7 +86,6 @@ class DownloadItemModel {
       status: DownloadStatus.values[json['status'] as int],
       progress: json['progress'] as double,
       errorMessage: json['errorMessage'] as String?,
-      // cancelToken will be null when loaded from JSON
     );
   }
 }

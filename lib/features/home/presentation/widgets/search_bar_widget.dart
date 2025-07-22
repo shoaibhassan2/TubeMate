@@ -1,11 +1,9 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 
-// This widget is now solely responsible for the visual search bar input.
-// Its internal "Download" button logic is removed, as external "Load Formats" will handle it.
 class SearchBarWidget extends StatefulWidget {
-  final TextEditingController controller; // Controller passed from parent
-  final FocusNode focusNode; // FocusNode passed from parent
+  final TextEditingController controller; 
+  final FocusNode focusNode; 
 
   const SearchBarWidget({
     super.key,
@@ -30,7 +28,6 @@ class _SearchBarWidgetState extends State<SearchBarWidget> {
 
   @override
   void dispose() {
-    // Controller and FocusNode are managed by the parent, so don't dispose here.
     super.dispose();
   }
 
@@ -91,8 +88,6 @@ class _SearchBarWidgetState extends State<SearchBarWidget> {
                   ),
                 ),
               ),
-              // The download/search icon logic is removed from here.
-              // It will be part of the external "Load Formats" button.
             ],
           ),
         ),
